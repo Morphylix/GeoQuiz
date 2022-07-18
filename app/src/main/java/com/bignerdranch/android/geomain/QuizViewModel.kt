@@ -4,6 +4,7 @@ import android.util.Log
 import androidx.lifecycle.ViewModel
 
 private const val TAG = "QuizViewModel"
+const val HINTS_LEFT = 3
 
 class QuizViewModel: ViewModel() {
 
@@ -21,7 +22,7 @@ class QuizViewModel: ViewModel() {
     var currentIndex = 0
     var correctAnswers = 0
     var isCheater = false
-    var judgementCount = 0
+    var hintsLeft = HINTS_LEFT
     val currentQuestionAnswer: Boolean
     get() = questionBank[currentIndex].answer
 

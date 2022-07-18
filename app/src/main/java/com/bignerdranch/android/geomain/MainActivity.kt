@@ -1,8 +1,9 @@
 package com.bignerdranch.android.geomain
 
+import android.annotation.SuppressLint
 import android.app.ActivityOptions
 import android.content.Intent
-import android.media.Image
+import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -10,17 +11,18 @@ import android.widget.Button
 import android.widget.ImageButton
 import android.widget.TextView
 import android.widget.Toast
-import androidx.lifecycle.ViewModelProvider
+import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModelProviders
-import org.w3c.dom.Text
 
 private const val TAG = "MainActivity"
 private const val KEY_INDEX = "Index"
-private const val KEY_JUDGEMENT = "Judgement"
+private const val KEY_HINTS = "Hints"
 private const val KEY_CORRECT = "Correct"
 private const val REQUEST_CODE_CHEAT = 0
 
 class MainActivity : AppCompatActivity() {
+
+    @SuppressLint("RestrictedApi")
 
     private lateinit var trueButton: Button
     private lateinit var falseButton: Button
@@ -28,12 +30,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var prevButton: ImageButton
     private lateinit var questionTextView: TextView
     private lateinit var cheatButton: Button
+    private lateinit var hintsLeftTextView: TextView
 
     private val quizViewModel: QuizViewModel by lazy {
         ViewModelProviders.of(this).get(QuizViewModel::class.java)
     }
 
 
+    @RequiresApi(Build.VERSION_CODES.M)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -46,8 +50,8 @@ class MainActivity : AppCompatActivity() {
         val correctAnswers = savedInstanceState?.getInt(KEY_CORRECT, 0) ?: 0
         quizViewModel.correctAnswers = correctAnswers
 
-        val judgementCount = savedInstanceState?.getInt(KEY_JUDGEMENT, 0) ?: 0
-        quizViewModel.judgementCount = judgementCount
+        val hintsLeft = savedInstanceState?.getInt(KEY_HINTS, 3) ?: 3
+        quizViewModel.hintsLeft = hintsLeft
 
         trueButton = findViewById(R.id.true_button)
         falseButton = findViewById(R.id.false_button)
@@ -55,6 +59,7 @@ class MainActivity : AppCompatActivity() {
         prevButton = findViewById(R.id.prev_button)
         questionTextView = findViewById(R.id.question_text_view)
         cheatButton = findViewById(R.id.cheat_button)
+        hintsLeftTextView = findViewById(R.id.hints_left_text_view)
 
         trueButton.setOnClickListener {
             checkAnswer(true)
@@ -86,11 +91,18 @@ class MainActivity : AppCompatActivity() {
         cheatButton.setOnClickListener { view ->
             val answerIsTrue = quizViewModel.currentQuestionAnswer
             val intent = CheatActivity.newIntent(this@MainActivity, answerIsTrue)
-            val options = ActivityOptions.makeClipRevealAnimation(view, 0, 0, view.width, view.height)
-            startActivityForResult(intent, REQUEST_CODE_CHEAT, options.toBundle())
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val options =
+                    ActivityOptions.makeClipRevealAnimation(view, 0, 0, view.width, view.height)
+                startActivityForResult(intent, REQUEST_CODE_CHEAT, options.toBundle())
+            }
+            else {
+                startActivityForResult(intent, REQUEST_CODE_CHEAT)
+            }
         }
 
         updateQuestion()
+        updateHintsLeftTextView()
 
     }
 
@@ -124,7 +136,7 @@ class MainActivity : AppCompatActivity() {
         super.onSaveInstanceState(savedInstanceState)
         Log.i(TAG, "OnSaveInstanceState")
         savedInstanceState.putInt(KEY_INDEX, quizViewModel.currentIndex)
-        savedInstanceState.putInt(KEY_JUDGEMENT, quizViewModel.judgementCount)
+        savedInstanceState.putInt(KEY_HINTS, quizViewModel.hintsLeft)
         savedInstanceState.putInt(KEY_CORRECT, quizViewModel.correctAnswers)
     }
 
@@ -150,6 +162,8 @@ class MainActivity : AppCompatActivity() {
             val result: Double = quizViewModel.correctAnswers.toDouble() / quizViewModel.questionBank.size.toDouble() * 100
             Toast.makeText(this, "$result% correct", Toast.LENGTH_LONG).show()
             quizViewModel.correctAnswers = 0
+            quizViewModel.hintsLeft = HINTS_LEFT
+            updateHintsLeftTextView()
             quizViewModel.wasAnsweredList = MutableList(quizViewModel.questionBank.size) {false}
         }
     }
@@ -165,6 +179,9 @@ class MainActivity : AppCompatActivity() {
     private fun setButtons(isEnabled: Boolean) {
         trueButton.isEnabled = isEnabled
         falseButton.isEnabled = isEnabled
+        if (quizViewModel.hintsLeft != 0) {
+            cheatButton.isEnabled = isEnabled
+        }
     }
 
     private fun updateQuestion() {
@@ -176,10 +193,13 @@ class MainActivity : AppCompatActivity() {
         val correctAnswer = quizViewModel.currentQuestionAnswer
         val messageResId: Int
         if (quizViewModel.currentWasCheated) {
-            messageResId = R.string.judgment_toast
-            quizViewModel.judgementCount++
+            quizViewModel.hintsLeft--
+            updateHintsLeftTextView()
+            if (quizViewModel.hintsLeft == 0) {
+                cheatButton.isEnabled = false
+            }
         }
-        else if (userAnswer == correctAnswer) {
+        if (userAnswer == correctAnswer) {
             messageResId = R.string.correct_toast
             quizViewModel.correctAnswers++
         }
@@ -188,5 +208,9 @@ class MainActivity : AppCompatActivity() {
         }
         setButtons(false)
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun updateHintsLeftTextView() {
+        hintsLeftTextView.text = getString(R.string.hints_left, quizViewModel.hintsLeft)
     }
 }

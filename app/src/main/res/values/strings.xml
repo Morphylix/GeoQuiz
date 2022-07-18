@@ -17,6 +17,8 @@
     <string name="warning_text">Are you sure you want to do this?</string>
     <string name="show_answer_button">Show Answer</string>
     <string name="cheat_button">Cheat!</string>
-    <string name="judgment_toast">Cheating is wrong.</string>
+    <string name="judgment_toast">Cheating is wrong… Whatever. You\'ll not see this text anyway LOL</string>
+    <string name="api_lvl">API level %2d</string>
+    <string name="hints_left">Hints left: %1d</string>
 
 </resources>

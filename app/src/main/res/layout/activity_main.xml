@@ -41,6 +41,12 @@
         android:text="@string/cheat_button"
         android:layout_marginTop="24dp"/>
 
+    <TextView
+        android:id="@+id/hints_left_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text=""/>
+
     <androidx.appcompat.widget.LinearLayoutCompat
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
