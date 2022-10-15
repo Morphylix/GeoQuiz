@@ -8,6 +8,7 @@ Learned and worked with:
 * MVC
 * ViewModel
 * Activity Lifecycle
+* Layouts
 
 Screenshots:
 -----------------
