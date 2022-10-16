@@ -13,4 +13,7 @@ Learned and worked with:
 Screenshots:
 -----------------
 ![](/img/pic1.png)
+![](/img/pic2.png)
+![](/img/pic3.png)
+![](/img/pic4.png)
 
